@@ -1,0 +1,3 @@
+numpy==1.17.0
+asciiplotlib==0.2.1
+lief==0.10.0.dev0
