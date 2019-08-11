@@ -1,11 +1,18 @@
 #!/usr/bin/python3
 
 from collections import Counter
+import string
+
 import asciiplotlib as apl
 import numpy as np
 import lief
 import argparse
 
+strings_of_interest = [
+    'command',
+    'debug',
+    'http',
+]
 
 def f_red(t): return('\033[91m{}\033[00m'.format(t))
 def f_green(t): return('\033[92m{}\033[00m'.format(t))
@@ -52,10 +59,34 @@ def plot_entropy(binary_file_path: str):
     fig.show()
 
 
-
 def parse_bin(binary_file_path):
     b = lief.parse(binary_file_path)
     return b.header, [x.name for x in b.imported_functions]
+
+
+def strings(binary_file_path):
+    sl = []
+    with open(binary_file_path, errors='ignore') as f:
+        s = ''
+        for c in f.read():
+            if c in string.printable:
+                s += c
+            else:
+                if len(s) >= 4:
+                    sl.append(s)
+                s = ''
+    return sl
+
+
+def print_interesting_strings(binary_file_path: str):
+    for s1 in strings(binary_file_path):
+        if len(s1.split(' ')) > 3:
+            print(s1, end=', ')
+            continue
+        for s2 in strings_of_interest:
+            if s2 in s1.lower():
+                print(f_red(s1), end=', ')
+                continue
 
 
 def parse_args():
@@ -81,7 +112,10 @@ def main():
 
     print_header('Imported functions')
     print(impfun)
+    print('\n')
 
+    print_header('Strings of interest')
+    print_interesting_strings(binary_file_path)
 
 if __name__ == '__main__':
     main()
